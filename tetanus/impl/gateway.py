@@ -2,24 +2,16 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import json
+from logging import getLogger
+from typing import Any, Callable, Optional, cast
 
 from aiohttp import ClientWebSocketResponse, WSMessage
 
-import json
-
-from typing import Optional, cast, Callable, Any
-
-from logging import getLogger
-
-from ..types.gateway import GatewayData
-
-from .http import HTTPClient
-
-from .dispatcher import Dispatcher
-
 from ..models.message import Message
-from ..types.gateway import MessageData
-
+from ..types.gateway import GatewayData, MessageData
+from .dispatcher import Dispatcher
+from .http import HTTPClient
 
 _log = getLogger(__name__)
 
@@ -29,6 +21,7 @@ class OPCodes:
     PING = "PING"
     PONG = "PONG"
 
+
 class GatewayClient:
     def __init__(self, http: HTTPClient, dispatcher: Dispatcher):
         self.dispatcher = dispatcher
@@ -36,11 +29,10 @@ class GatewayClient:
         self.ws: Optional[ClientWebSocketResponse] = None
         self.first_ping: bool = True
 
-
     async def receive(self):
         if not self.ws:
             return
-        
+
         msg: WSMessage = await self.ws.receive()
 
         self.recent_payload = cast(GatewayData, msg.json())
@@ -50,7 +42,7 @@ class GatewayClient:
     async def keep_connection(self):
         if not self.ws:
             return
-        
+
         await self.ws.send_json({"op": OPCodes.PING})
 
         await asyncio.sleep(45.0)
@@ -62,18 +54,16 @@ class GatewayClient:
 
         self.ws = await self._http._session.ws_connect(gateway_url)
 
-
         _log.info(f"Successfully connected to eludris gateway")
         _log.info("Sent first ping payload to gateway")
         asyncio.create_task(self.keep_connection())
 
-
         return await self.listen_for_events()
-    
+
     async def listen_for_events(self):
         if not self.ws:
             return
-    
+
         while not self.ws.closed:
             res = await self.receive()
 
@@ -90,7 +80,6 @@ class GatewayClient:
                     message = Message(msg_data)
 
                     self.dispatcher.dispatch(op.lower(), message)
-
 
     async def close(self) -> None:
         if not self.ws:

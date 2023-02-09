@@ -1,18 +1,19 @@
 from __future__ import annotations
-import asyncio
 
+import asyncio
 from typing import TYPE_CHECKING, Optional
 
-from .http import HTTPClient
-from .gateway import GatewayClient
 from .dispatcher import Dispatcher
+from .gateway import GatewayClient
+from .http import HTTPClient
+
 
 class Client:
     def __init__(self, api_url: Optional[str] = None):
         self.http = HTTPClient(api_url)
 
         # The following get filled in later
-        self.gateway: GatewayClient = None # type: ignore
+        self.gateway: GatewayClient = None  # type: ignore
 
         self.loop = asyncio.get_event_loop()
         self.dispatcher = Dispatcher(self.http)
@@ -38,7 +39,6 @@ class Client:
         while True:
             await self.gateway.connect()
 
-
     async def start(self):
         await self.login()
         await self.connect()
@@ -55,4 +55,3 @@ class Client:
             asyncio.run(self.start())
         except (KeyboardInterrupt, RuntimeError):
             self.loop.run_until_complete(self.close())
-

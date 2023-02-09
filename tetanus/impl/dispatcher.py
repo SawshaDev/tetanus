@@ -1,20 +1,18 @@
 from __future__ import annotations
-import asyncio
 
+import asyncio
+import inspect
+from collections import defaultdict
 from typing import Any, Callable, Coroutine, TypeVar
 
-from collections import defaultdict
-
-import inspect
-
-from .http import HTTPClient
-
-from ..types.gateway import MessageData
 from ..models.message import Message
+from ..types.gateway import MessageData
+from .http import HTTPClient
 
 T = TypeVar("T")
 Func = Callable[..., T]
 CoroFunc = Func[Coroutine[Any, Any, Any]]
+
 
 class Dispatcher:
     def __init__(self, http: HTTPClient):

@@ -2,6 +2,7 @@ from typing import Any, Dict, Optional, Union
 
 from aiohttp import ClientResponse
 
+
 def _shorten_error_dict(d, parent_key: str = "") -> dict[str, str]:
     ret_items: dict[str, str] = {}
 
@@ -18,9 +19,9 @@ def _shorten_error_dict(d, parent_key: str = "") -> dict[str, str]:
     return ret_items
 
 
-
 class BaseException(Exception):
     pass
+
 
 class HTTPException(BaseException):
     def __init__(self, response: ClientResponse, message: Optional[Union[str, Dict[str, Any]]]):

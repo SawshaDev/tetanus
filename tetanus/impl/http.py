@@ -1,15 +1,14 @@
 from __future__ import annotations
 
+import json
 from typing import Any, Optional
 from urllib.parse import quote as urlquote
 
 from aiohttp import ClientResponse, ClientSession
 
-import json
-
+from ..errors import HTTPException
 from ..models.instance import Instance
 from ..types.http import InstancePayload
-from ..errors import HTTPException
 
 DEFAULT_URL = "https://api.eludris.gay"
 
@@ -32,7 +31,7 @@ class HTTPClient:
             self.url = DEFAULT_URL
         else:
             self.url = api_url
-            
+
         self._session: ClientSession = None  # type: ignore
 
     @staticmethod
@@ -55,7 +54,7 @@ class HTTPClient:
 
         if resp.status >= 400:
             raise HTTPException(resp, await self._text_or_json(resp))
-        
+
     async def fetch_instance(self) -> Instance:
         payload: InstancePayload = await self.request(Route("GET", "/"))
 
