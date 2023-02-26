@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import asyncio
-import inspect
-import json
 from logging import getLogger
-from typing import Any, Callable, Optional, cast
+from typing import Optional, cast
 
 from aiohttp import ClientWebSocketResponse, WSMessage
 

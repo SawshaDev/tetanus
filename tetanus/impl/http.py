@@ -1,16 +1,14 @@
 from __future__ import annotations
 
-import json
 from typing import Any, Optional
 from urllib.parse import quote as urlquote
 
-from aiohttp import ClientResponse, ClientSession
+from aiohttp import ClientSession
 
 from ..errors import HTTPException
-from ..models.instance import Instance
+from ..models import Instance
 from ..types.http import InstancePayload
-
-DEFAULT_URL = "https://api.eludris.gay"
+from ..types.gateway import MessageData
 
 
 class Route:
@@ -26,22 +24,9 @@ class Route:
 
 
 class HTTPClient:
-    def __init__(self, api_url: Optional[str] = None):
-        if api_url is None:
-            self.url = DEFAULT_URL
-        else:
-            self.url = api_url
+    def __init__(self, api_url: str):
+        self.url = api_url
 
-        self._session: ClientSession = None  # type: ignore
-
-    @staticmethod
-    async def _text_or_json(resp: ClientResponse) -> dict[str, Any]:
-        text = await resp.text()
-
-        if resp.content_type == "application/json":
-            return json.loads(text)
-
-        return text  # type: ignore
 
     async def login(self):
         self._session = ClientSession()
@@ -50,12 +35,17 @@ class HTTPClient:
         resp = await self._session.request(route.method, f"{self.url}{route.url}", json=json)
 
         if 200 <= resp.status < 300:
-            return await self._text_or_json(resp)
+            return await resp.json()
 
         if resp.status >= 400:
-            raise HTTPException(resp, await self._text_or_json(resp))
+            raise HTTPException(resp, await resp.json())
 
     async def fetch_instance(self) -> Instance:
         payload: InstancePayload = await self.request(Route("GET", "/"))
 
         return Instance(payload)
+
+    async def send_message(self, author: str, content: str) -> MessageData:
+        payload: MessageData = await self.request(Route("POST", "/messages"), json={"author": author, "content": content})
+
+        return payload

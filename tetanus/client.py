@@ -1,19 +1,20 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING, Optional
 
-from .dispatcher import Dispatcher
-from .gateway import GatewayClient
-from .http import HTTPClient
+from .impl.dispatcher import Dispatcher
+from .impl.gateway import GatewayClient
+from .impl.http import HTTPClient
 
+from .models import Message
+
+DEFAULT_API_URL = "https://api.eludris.gay"
 
 class Client:
-    def __init__(self, api_url: Optional[str] = None):
+    def __init__(self, name: str, api_url: str = DEFAULT_API_URL):
+        self.name = name
         self.http = HTTPClient(api_url)
 
-        # The following get filled in later
-        self.gateway: GatewayClient = None  # type: ignore
 
         self.loop = asyncio.get_event_loop()
         self.dispatcher = Dispatcher(self.http)
@@ -38,6 +39,11 @@ class Client:
 
         while True:
             await self.gateway.connect()
+
+    async def create_message(self, content: str) -> Message:
+        payload = await self.http.send_message(self.name, content)
+
+        return Message(payload)
 
     async def start(self):
         await self.login()
